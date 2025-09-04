@@ -1,0 +1,397 @@
+{
+  "info": {
+    "name": "AI Chatbot Backend API",
+    "description": "Complete API documentation for the AI Chatbot with RAG Pipeline, User Authentication, and Chat History",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "BASE_URL",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "User Registration",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser\",\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\",\n  \"password_confirm\": \"password123\",\n  \"first_name\": \"Test\",\n  \"last_name\": \"User\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/auth/register/"
+            },
+            "description": "Register a new user account. User will be created as inactive until email verification."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {},
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": {
+                "message": "User registered successfully. Please check your email for verification.",
+                "user": {
+                  "id": 1,
+                  "username": "testuser",
+                  "email": "test@example.com",
+                  "first_name": "Test",
+                  "last_name": "User",
+                  "is_verified": false,
+                  "created_at": "2025-09-03T22:00:40.994338Z"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "User Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/auth/login/"
+            },
+            "description": "Login with email and password to receive JWT access and refresh tokens."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": {
+                "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                "user": {
+                  "id": 1,
+                  "username": "testuser",
+                  "email": "test@example.com",
+                  "first_name": "Test",
+                  "last_name": "User",
+                  "is_verified": true,
+                  "created_at": "2025-09-03T22:00:40.994338Z"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Email Verification",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"verification_token_here\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/auth/verify-email/"
+            },
+            "description": "Verify user email using the token sent to the user's email address."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Should verify email with valid token', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.response.to.be.json;",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.message).to.eql('Email verified successfully');",
+                  "    pm.expect(jsonData.user.is_verified).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test('Should reject invalid token', function () {",
+                  "    if (pm.response.code === 400) {",
+                  "        pm.response.to.be.json;",
+                  "        const jsonData = pm.response.json();",
+                  "        pm.expect(jsonData.error).to.include('Invalid or expired verification token');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{BASE_URL}}/api/auth/verify-email/",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"token\": \"valid_token_here\"\n}"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "body": {
+                "message": "Email verified successfully",
+                "user": {
+                  "id": 1,
+                  "email": "test@example.com",
+                  "is_verified": true
+                }
+              }
+            },
+            {
+              "name": "Invalid Token",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{BASE_URL}}/api/auth/verify-email/",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"token\": \"invalid_token\"\n}"
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "body": {
+                "error": "Invalid or expired verification token"
+              }
+            },
+            {
+              "name": "Already Verified",
+              "originalRequest": {
+                "method": "POST",
+                "url": "{{BASE_URL}}/api/auth/verify-email/",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"token\": \"valid_token_here\"\n}"
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "body": {
+                "error": "Email already verified"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Chat Management",
+      "item": [
+        {
+          "name": "Create Chat Session",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"New Chat Session\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/chat/sessions/"
+            },
+            "description": "Create a new chat session for the authenticated user."
+          }
+        },
+        {
+          "name": "Get Chat History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/chat/history/"
+            },
+            "description": "Retrieve chat history for the authenticated user including all sessions and recent messages."
+          }
+        },
+        {
+          "name": "Send Message to Session",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Hello, how are you?\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/chat/sessions/1/messages/"
+            },
+            "description": "Send a message to a specific chat session."
+          }
+        }
+      ]
+    },
+    {
+      "name": "RAG Pipeline",
+      "item": [
+        {
+          "name": "Index Documents",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"documents\": [\n    {\n      \"title\": \"AI Overview\",\n      \"content\": \"Artificial Intelligence is a field of computer science focused on creating intelligent machines.\",\n      \"metadata\": {\n        \"category\": \"AI\"\n      }\n    },\n    {\n      \"title\": \"Machine Learning\",\n      \"content\": \"Machine Learning is a subset of AI that enables systems to learn and improve from experience.\",\n      \"metadata\": {\n        \"category\": \"ML\"\n      }\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/rag/index-documents/"
+            },
+            "description": "Index documents for retrieval in the RAG pipeline."
+          }
+        },
+        {
+          "name": "Chat with RAG",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"What is Artificial Intelligence?\",\n  \"session_id\": null\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/rag/chat/"
+            },
+            "description": "Send a message to the chatbot. The RAG pipeline will retrieve relevant documents and generate an AI response."
+          },
+          "response": [
+            {
+              "name": "Success with RAG",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": {
+                "session_id": 1,
+                "user_message": {
+                  "id": 1,
+                  "message_type": "user",
+                  "content": "What is Artificial Intelligence?",
+                  "created_at": "2025-09-03T22:04:23.463702Z"
+                },
+                "bot_response": {
+                  "id": 2,
+                  "message_type": "bot",
+                  "content": "Artificial Intelligence is a field of computer science...",
+                  "metadata": {
+                    "context_used": true,
+                    "processing_time": 1.83,
+                    "relevant_docs_count": 1
+                  },
+                  "created_at": "2025-09-03T22:04:27.443309Z"
+                },
+                "relevant_documents": [
+                  {
+                    "id": "doc_1",
+                    "score": 0.85,
+                    "title": "AI Overview",
+                    "content": "Artificial Intelligence is a field of computer science..."
+                  }
+                ],
+                "processing_time": 1.83
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
