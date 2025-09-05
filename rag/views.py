@@ -6,6 +6,7 @@ from django.shortcuts import get_object_or_404
 from django.conf import settings
 from chat.models import ChatSession, Message
 from chat.serializers import MessageSerializer
+from .services import get_rag_service
 import time
 
 class ChatBotView(generics.GenericAPIView):
@@ -41,15 +42,30 @@ class ChatBotView(generics.GenericAPIView):
         start_time = time.time()
         
         # Check if we have API keys for real processing
-        if hasattr(settings, 'GOOGLE_API_KEY') and settings.GOOGLE_API_KEY and hasattr(settings, 'PINECONE_API_KEY') and settings.PINECONE_API_KEY:
-            from .services import rag_service
-            rag_result = rag_service.process_query(user_message)
+        if hasattr(settings, 'MISTRAL_API_KEY') and settings.MISTRAL_API_KEY and hasattr(settings, 'PINECONE_API_KEY') and settings.PINECONE_API_KEY:
+            rag_service = get_rag_service()
+            if rag_service:
+                rag_result = rag_service.process_query(user_message)
+            else:
+                # Fallback if RAG service is not available
+                bot_response = f"This is a mock response to: {user_message}. RAG service not initialized."
+                relevant_documents = []
+                context_used = False
+                processing_time = time.time() - start_time
+                # Skip saving bot response and return early if service is not available
+                return Response({
+                    'session_id': session.id,
+                    'user_message': MessageSerializer(user_message_obj).data,
+                    'bot_response': MessageSerializer({'content': bot_response}).data,
+                    'relevant_documents': relevant_documents,
+                    'processing_time': processing_time
+                })
             bot_response = rag_result['response']
             relevant_documents = rag_result['relevant_documents']
             context_used = rag_result['context_used']
         else:
             # Mock response for testing without API keys
-            bot_response = f"This is a mock response to: {user_message}. In production, this would use the RAG pipeline with Gemini and Pinecone."
+            bot_response = f"This is a mock response to: {user_message}. In production, this would use the RAG pipeline with Mistral and Pinecone."
             relevant_documents = []
             context_used = False
         
@@ -88,23 +104,24 @@ class DocumentIndexView(generics.GenericAPIView):
             )
         
         # Check if we have API keys for real processing
-        if hasattr(settings, 'PINECONE_API_KEY') and settings.PINECONE_API_KEY and hasattr(settings, 'GOOGLE_API_KEY') and settings.GOOGLE_API_KEY:
-            from .services import rag_service
+        if hasattr(settings, 'PINECONE_API_KEY') and settings.PINECONE_API_KEY:
+            rag_service = get_rag_service()
             indexed_count = 0
-            for doc in documents:
-                doc_id = doc.get('id') or f"doc_{int(time.time())}_{indexed_count}"
-                title = doc.get('title', '')
-                content = doc.get('content', '')
-                
-                if title and content:
-                    success = rag_service.add_document(
-                        doc_id=doc_id,
-                        title=title,
-                        content=content,
-                        metadata=doc.get('metadata', {})
-                    )
-                    if success:
-                        indexed_count += 1
+            if rag_service:
+                for doc in documents:
+                    doc_id = doc.get('id') or f"doc_{int(time.time())}_{indexed_count}"
+                    title = doc.get('title', '')
+                    content = doc.get('content', '')
+                    
+                    if title and content:
+                        success = rag_service.add_document(
+                            doc_id=doc_id,
+                            title=title,
+                            content=content,
+                            metadata=doc.get('metadata', {})
+                        )
+                        if success:
+                            indexed_count += 1
         else:
             # Mock indexing for testing without API keys
             indexed_count = len(documents)

@@ -4,11 +4,12 @@ from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q
 from .models import ChatSession, Message, Document
 from .serializers import (
-    ChatSessionSerializer, 
+    ChatSessionSerializer,
     ChatSessionCreateSerializer,
     MessageSerializer,
     DocumentSerializer
 )
+from rag.services import get_rag_service
 
 class ChatSessionListCreateView(generics.ListCreateAPIView):
     serializer_class = ChatSessionSerializer
@@ -63,8 +64,33 @@ class MessageListView(generics.ListCreateAPIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
         # Set the session and message type, then save
-        message = serializer.save(session=session, message_type='user')
-        
+        user_message = serializer.save(session=session, message_type='user')
+
+        # Generate AI response if RAG service is available
+        rag_service = get_rag_service()
+        if rag_service:
+            try:
+                ai_response_content = rag_service.process_query(user_message.content)['response']
+                Message.objects.create(
+                    session=session,
+                    message_type='bot',
+                    content=ai_response_content
+                )
+            except Exception as e:
+                ai_response_content = f"Error generating AI response: {str(e)}"
+                Message.objects.create(
+                    session=session,
+                    message_type='bot',
+                    content=ai_response_content
+                )
+        else:
+            ai_response_content = "I'm sorry, the AI service is currently unavailable." # Fallback message
+            Message.objects.create(
+                session=session,
+                message_type='bot',
+                content=ai_response_content
+            )
+
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class ChatHistoryView(generics.ListAPIView):

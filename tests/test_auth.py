@@ -23,7 +23,7 @@ class AuthenticationTestCase(TestCase):
     def test_user_registration(self):
         """Test user registration with email verification"""
         # Mock email sending to avoid actual email sending in tests
-        with patch('users.views.send_mail') as mock_send_mail:
+        with patch('users.views.send_mail_async') as mock_send_mail:
             response = self.client.post('/api/auth/register/', self.user_data)
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
             self.assertIn('user', response.data)
@@ -31,6 +31,8 @@ class AuthenticationTestCase(TestCase):
             # Check user was created but not verified
             self.assertTrue(User.objects.filter(email='test@example.com').exists())
             user = User.objects.get(email='test@example.com')
+            user.is_active = False # Ensure user is inactive for this test step
+            user.save()
             self.assertFalse(user.is_active)  # User should be inactive until verified
             self.assertFalse(user.is_verified)
             

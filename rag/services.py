@@ -1,40 +1,81 @@
+"""
+RAG (Retrieval-Augmented Generation) Service
+===========================================
+
+This module implements the RAG pipeline that combines document retrieval
+with AI response generation. It uses Google Gemini for embeddings and
+response generation, and Pinecone for vector storage and retrieval.
+
+The RAG pipeline:
+1. Convert user query to embedding using Gemini
+2. Search similar documents in Pinecone vector database
+3. Retrieve relevant documents
+4. Generate AI response using retrieved context
+5. Return response with relevant documents
+
+Dependencies:
+- google-generativeai: For embeddings and response generation
+- pinecone-client: For vector database operations
+"""
 import os
-import google.generativeai as genai
+
 import pinecone
 from django.conf import settings
 from typing import List, Dict, Any
 import json
+import time
+from mistralai.client import MistralClient
+from mistralai.exceptions import MistralAPIStatusException
+
+
 
 class RAGService:
+    MAX_RETRIES = 5
+    BASE_DELAY = 2  # seconds
+
     def __init__(self):
-        # Initialize Google Gemini
+        """Initialize RAG service with Gemini and Pinecone connections."""
+
+
+        # Initialize Mistral AI for response generation
         try:
-            genai.configure(api_key=settings.GOOGLE_API_KEY)
-            self.model = genai.GenerativeModel('gemini-2.0-flash')
-            self.gemini_available = True
+            self.mistral_client = MistralClient(api_key=settings.MISTRAL_API_KEY)
+            self.mistral_model = "mistral-large-latest" # Or another suitable Mistral model
+            self.mistral_available = True
         except Exception as e:
-            print(f"Error initializing Gemini: {e}")
-            self.gemini_available = False
+            print(f"Error initializing Mistral AI: {e}")
+            self.mistral_available = False
         
-        # Initialize Pinecone with new API
+        # Initialize Pinecone vector database for document storage and retrieval
         try:
             self.pc = pinecone.Pinecone(api_key=settings.PINECONE_API_KEY)
             
-            # Get or create index
+            # Get or create index for document storage
             self.index_name = settings.PINECONE_INDEX_NAME
             existing_indexes = self.pc.list_indexes().names()
             
             if self.index_name not in existing_indexes:
-                # Create index with correct dimensions for Gemini
                 self.pc.create_index(
                     name=self.index_name,
-                    dimension=3072,  # Gemini embedding dimension
-                    metric='cosine',
-                    spec=pinecone.ServerlessSpec(
-                        cloud='aws',
-                        region='us-east-1'
-                    )
+                    dimension=1024,  # Updated to match Mistral embeddings
+                    metric='cosine'
                 )
+            else:
+                # Check if existing index has correct dimension
+                try:
+                    index_stats = self.pc.describe_index(self.index_name)
+                    if index_stats.dimension != 1024:
+                        # Delete and recreate with correct dimension for testing
+                        self.pc.delete_index(self.index_name)
+                        time.sleep(2)  # Wait for deletion
+                        self.pc.create_index(
+                            name=self.index_name,
+                            dimension=1024,
+                            metric='cosine'
+                        )
+                        time.sleep(2)  # Wait for creation
+                except Exception as e:
+                    print(f"Error checking index dimension: {e}")
             
             self.index = self.pc.Index(self.index_name)
             self.pinecone_available = True
@@ -43,31 +84,66 @@ class RAGService:
             self.pinecone_available = False
     
     def get_embedding(self, text: str) -> List[float]:
-        """Get embedding for text using Gemini"""
-        if not self.gemini_available:
+        """
+        Get embedding for text.
+        
+        Args:
+            text: Input text to convert to embedding
+            
+        Returns:
+            List of floats representing the text embedding
+        """
+        if not self.mistral_available:
+            print("Error: No AI service available for embedding.")
             return []
         
-        try:
-            result = genai.embed_content(
-                model="models/embedding-001",
-                content=text,
-                task_type="retrieval_document",
-                title="Embedding of single string"
-            )
-            return result['embedding']
-        except Exception as e:
-            print(f"Error getting embedding: {e}")
-            return []
+        retries = 0
+        delay = self.BASE_DELAY
+        
+        while retries < self.MAX_RETRIES:
+            try:
+                embedding_response = self.mistral_client.embeddings(model="mistral-embed", input=[text])
+                embedding = embedding_response.data[0].embedding
+                return embedding
+            except MistralAPIStatusException as e:
+                if e.status_code == 429:
+                    retries += 1
+                    if retries < self.MAX_RETRIES:
+                        print(f"Mistral embedding rate limit exceeded. Retrying in {delay} seconds... (attempt {retries}/{self.MAX_RETRIES})")
+                        time.sleep(delay)
+                        delay *= 2  # Exponential backoff
+                    else:
+                        print(f"Mistral embedding failed after {self.MAX_RETRIES} retries: {e}")
+                        return []
+                else:
+                    print(f"Mistral embedding error: {e}")
+                    return []
+            except Exception as e:
+                print(f"Mistral embedding error: {e}")
+                return []
     
     def add_document(self, doc_id: str, title: str, content: str, metadata: Dict[str, Any] = None):
-        """Add document to vector database"""
+        """
+        Add document to vector database
+        
+        Args:
+            doc_id: Unique identifier for the document
+            title: Document title
+            content: Document content/text
+            metadata: Additional metadata for the document
+            
+        Returns:
+            Boolean indicating success/failure
+        """
         if not self.pinecone_available:
             return False
         
+        # Generate embedding for document content
         embedding = self.get_embedding(content)
         if not embedding:
             return False
         
+        # Prepare metadata
         metadata = metadata or {}
         metadata.update({
             'title': title,
@@ -76,6 +152,7 @@ class RAGService:
         })
         
         try:
+            # Store document in Pinecone vector database
             self.index.upsert(
                 vectors=[(doc_id, embedding, metadata)]
             )
@@ -85,21 +162,33 @@ class RAGService:
             return False
     
     def search_documents(self, query: str, top_k: int = 3) -> List[Dict[str, Any]]:
-        """Search for relevant documents"""
+        """
+        Search for relevant documents
+        
+        Args:
+            query: Search query
+            top_k: Number of top results to return
+            
+        Returns:
+            List of relevant documents with metadata
+        """
         if not self.pinecone_available:
             return []
         
+        # Generate embedding for search query
         query_embedding = self.get_embedding(query)
         if not query_embedding:
             return []
         
         try:
+            # Search for similar documents in vector database
             results = self.index.query(
                 vector=query_embedding,
                 top_k=top_k,
                 include_metadata=True
             )
             
+            # Format results
             documents = []
             for match in results['matches']:
                 documents.append({
@@ -115,42 +204,64 @@ class RAGService:
             print(f"Error searching documents: {e}")
             return []
     
-    def generate_response(self, query: str, context: str = "") -> str:
-        """Generate response using Gemini"""
-        if not self.gemini_available:
-            return "I apologize, but the AI service is not available at the moment."
+    def generate_response(self, query, context):
+        """
+        Generate response using Mistral AI
         
-        try:
-            if context:
-                prompt = f"""Based on the following context, please answer the user's question. 
-                If the context doesn't contain relevant information, please provide a helpful general response.
-                
-                Context:
-                {context}
-                
-                User Question:
-                {query}
-                
-                Please provide a comprehensive and helpful response."""
-            else:
-                prompt = f"""Please answer the following question to the best of your ability:
-                
-                {query}
-                
-                Please provide a helpful and informative response."""
+        Args:
+            query: User's question
+            context: Retrieved document context
             
-            response = self.model.generate_content(prompt)
-            return response.text
-        except Exception as e:
-            print(f"Error generating response: {e}")
-            return "I apologize, but I'm having trouble generating a response right now. Please try again later."
+        Returns:
+            Generated response text
+        """
+        if not self.mistral_available:
+            return "I apologize, but no AI service is available at the moment."
+
+        retries = 0
+        delay = self.BASE_DELAY
+        
+        while retries < self.MAX_RETRIES:
+            try:
+                messages = [
+                    {"role": "system", "content": "You are a helpful AI assistant. Use the provided context to answer questions accurately."},
+                    {"role": "user", "content": f"Context: {context}\n\nQuestion: {query}\n\nPlease provide a helpful and accurate response based on the given context."}
+                ]
+                
+                chat_response = self.mistral_client.chat(model=self.mistral_model, messages=messages)
+                response = chat_response.choices[0].message.content
+                return response
+            except MistralAPIStatusException as e:
+                if e.status_code == 429:
+                    retries += 1
+                    if retries < self.MAX_RETRIES:
+                        print(f"Mistral chat rate limit exceeded. Retrying in {delay} seconds... (attempt {retries}/{self.MAX_RETRIES})")
+                        time.sleep(delay)
+                        delay *= 2  # Exponential backoff
+                    else:
+                        print(f"Mistral chat failed after {self.MAX_RETRIES} retries: {e}")
+                        return "I apologize, but I'm having trouble generating a response at the moment due to high demand."
+                else:
+                    print(f"Mistral chat error: {e}")
+                    return "I apologize, but I'm having trouble generating a response at the moment."
+            except Exception as e:
+                print(f"Mistral chat error: {e}")
+                return "I apologize, but I'm having trouble generating a response at this time."
     
     def process_query(self, query: str) -> Dict[str, Any]:
-        """Process user query with RAG pipeline"""
-        # Search for relevant documents
+        """
+        Process user query with complete RAG pipeline
+        
+        Args:
+            query: User's question
+            
+        Returns:
+            Dictionary containing response, relevant documents, and context usage
+        """
+        # Step 1: Search for relevant documents
         relevant_docs = self.search_documents(query)
         
-        # Prepare context from relevant documents
+        # Step 2: Prepare context from relevant documents
         context = ""
         if relevant_docs:
             context_parts = []
@@ -159,7 +270,7 @@ class RAGService:
                     context_parts.append(f"Document: {doc['title']}\nContent: {doc['content']}")
             context = "\n\n".join(context_parts)
         
-        # Generate response
+        # Step 3: Generate AI response
         response = self.generate_response(query, context)
         
         return {
@@ -168,13 +279,22 @@ class RAGService:
             'context_used': bool(context)
         }
 
-# Initialize the service only if we have the required API keys
-if hasattr(settings, 'GOOGLE_API_KEY') and settings.GOOGLE_API_KEY and hasattr(settings, 'PINECONE_API_KEY') and settings.PINECONE_API_KEY:
-    try:
-        rag_service = RAGService()
-    except Exception as e:
-        print(f"Error initializing RAG service: {e}")
-        rag_service = None
-else:
-    print("Google API key or Pinecone API key not found. RAG service will not be available.")
-    rag_service = None
+
+rag_service_instance = None
+
+def get_rag_service():
+    global rag_service_instance
+    if rag_service_instance is None:
+        pinecone_api_key = settings.PINECONE_API_KEY
+        mistral_api_key = settings.MISTRAL_API_KEY
+
+        if (mistral_api_key and pinecone_api_key):
+            try:
+                rag_service_instance = RAGService()
+            except Exception as e:
+                print(f"Error initializing RAGService: {e}")
+                rag_service_instance = None
+        else:
+            print("RAG service not available. Missing MISTRAL_API_KEY or PINECONE_API_KEY.")
+            rag_service_instance = None
+    return rag_service_instance

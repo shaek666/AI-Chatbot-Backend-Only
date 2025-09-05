@@ -83,3 +83,11 @@ def backup_chat_data():
     # Export data logic would go here
     print(f"Backup created: {backup_file}")
     return {'backup_file': backup_file}
+
+def send_mail_async(subject, message, from_email, recipient_list, fail_silently=False):
+    """Send email asynchronously using Django's send_mail function."""
+    try:
+        send_mail(subject, message, from_email, recipient_list, fail_silently=fail_silently)
+        print(f"Email sent asynchronously to {', '.join(recipient_list)}")
+    except Exception as e:
+        print(f"Error sending email asynchronously: {e}")

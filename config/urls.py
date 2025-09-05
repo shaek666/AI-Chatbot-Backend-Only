@@ -28,6 +28,3 @@ urlpatterns = [
     path('api/verify-email/<str:token>/', VerifyEmailView.as_view(), name='legacy-verify-email-with-token'),
 
 ]
-
-# Add this to enable background tasks
-from background_tasks.scheduler import scheduler

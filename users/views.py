@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model, authenticate
 from django.utils import timezone
 from django.core.mail import send_mail
 from django.conf import settings
+from background_tasks.tasks import send_mail_async
 import secrets
 import string
 from .models import EmailVerification
@@ -28,8 +29,8 @@ class RegisterView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         
-        # Explicitly set user as inactive until email verification
-        user.is_active = False
+        # Set user as active but not verified until email verification
+        user.is_active = True
         user.is_verified = False
         user.save()
         
@@ -51,12 +52,11 @@ class RegisterView(generics.CreateAPIView):
             # fallback to localhost if request isn't available for some reason
             verification_url = f"http://localhost:8000/api/auth/verify-email/{token}/"
 
-        send_mail(
+        send_mail_async(
             'Verify your email',
             f'Please click the following link to verify your email: {verification_url}',
             settings.EMAIL_HOST_USER,
-            [user.email],
-            fail_silently=False,
+            [user.email]
         )
         
         return Response({

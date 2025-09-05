@@ -3,8 +3,17 @@ from apscheduler.triggers.cron import CronTrigger
 from django.conf import settings
 import django
 import os
-import redis
 import logging
+
+from apscheduler.schedulers.background import BackgroundScheduler
+
+# Import redis and fakeredis
+import redis
+try:
+    import fakeredis
+    FAKE_REDIS_AVAILABLE = True
+except ImportError:
+    FAKE_REDIS_AVAILABLE = False
 
 # Set up Django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
@@ -24,14 +33,22 @@ logging.getLogger('apscheduler').setLevel(logging.WARNING)
 def check_redis_connection():
     """Check if Redis is available for background tasks."""
     try:
-        r = redis.Redis(
-            host=settings.REDIS_HOST,
-            port=settings.REDIS_PORT,
-            db=settings.REDIS_DB,
-            password=settings.REDIS_PASSWORD or None
-        )
-        r.ping()
-        return True
+        if getattr(settings, 'USE_FAKE_REDIS', False) and FAKE_REDIS_AVAILABLE:
+            # Use fakeredis for development
+            r = fakeredis.FakeRedis()
+            r.ping()
+            print("✓ Using fakeredis for development")
+            return True
+        else:
+            # Use real Redis
+            r = redis.Redis(
+                host=settings.REDIS_HOST,
+                port=settings.REDIS_PORT,
+                db=settings.REDIS_DB,
+                password=settings.REDIS_PASSWORD or None
+            )
+            r.ping()
+            return True
     except Exception as e:
         print(f"Redis connection error: {e}")
         return False
@@ -44,8 +61,8 @@ def start_scheduler():
     if check_redis_connection():
         print("✓ Redis connection established. Background tasks will work properly.")
     else:
-        print("⚠ Background tasks scheduler started but Redis is not available.")
-        print("  Tasks will be scheduled but may fail to execute properly.")
+        print("⚠ Background tasks scheduler started without Redis.")
+        print("  Tasks will be scheduled and run in memory.")
     
     # Schedule cleanup tasks
     scheduler.add_job(
@@ -89,7 +106,12 @@ def start_scheduler():
 
 # Global scheduler instance
 try:
-    scheduler = start_scheduler()
+    from django.conf import settings
+    if getattr(settings, 'DISABLE_BACKGROUND_TASKS', False):
+        print("Background tasks disabled for development")
+        scheduler = None
+    else:
+        scheduler = start_scheduler()
 except Exception as e:
     print(f"⚠ Error starting background scheduler: {e}")
     scheduler = None

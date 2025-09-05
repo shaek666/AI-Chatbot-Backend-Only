@@ -34,8 +34,8 @@ class UserLoginSerializer(serializers.Serializer):
             user = authenticate(username=email, password=password)
             if not user:
                 raise serializers.ValidationError('Invalid credentials')
-            if not user.is_active:
-                raise serializers.ValidationError('Account not verified')
+            if not user.is_verified:
+                raise serializers.ValidationError('Account not verified. Please check your email for verification link.')
             attrs['user'] = user
         else:
             raise serializers.ValidationError('Must include email and password')

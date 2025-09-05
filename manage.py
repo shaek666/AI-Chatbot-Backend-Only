@@ -1,33 +1,28 @@
 #!/usr/bin/env python
-"""Django's command-line utility for administrative tasks."""
+"""
+AI Chatbot Django Management Script
+===================================
+
+This is Django's command-line utility for administrative tasks.
+It sets up the Django environment and executes management commands.
+
+Usage:
+    python manage.py runserver    # Start development server
+    python manage.py migrate      # Run database migrations
+    python manage.py test         # Run test suite
+    python manage.py populate_documents  # Add predefined documents
+"""
 import os
 import sys
-import redis
-
-def check_redis_connection():
-    """Check if Redis is available for background tasks."""
-    try:
-        r = redis.Redis(
-            host='localhost',
-            port=6379,
-            db=0,
-            password=None
-        )
-        result = r.ping()
-        print(f"✓ Redis/Valkey connection successful: {result}")
-        return True
-    except Exception as e:
-        print(f"✗ Redis connection failed: {e}")
-        print(f"Error type: {type(e).__name__}")
-        return False
 
 def main():
-    """Run administrative tasks."""
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+    """
+    Main entry point for Django management commands.
     
-    # Check Redis connection for specific commands that need it
-    if len(sys.argv) > 1 and sys.argv[1] in ['runserver', 'shell', 'test']:
-        check_redis_connection()
+    Sets up the Django environment and executes the requested command.
+    """
+    # Set the Django settings module
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
     
     try:
         from django.core.management import execute_from_command_line
@@ -37,6 +32,8 @@ def main():
             "available on your PYTHONPATH environment variable? Did you "
             "forget to activate a virtual environment?"
         ) from exc
+    
+    # Execute the management command
     execute_from_command_line(sys.argv)
 
 if __name__ == '__main__':
