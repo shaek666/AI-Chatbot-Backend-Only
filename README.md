@@ -120,8 +120,8 @@ MISTRAL_API_KEY=your-mistral-api-key
 PINECONE_API_KEY=your-pinecone-key
 PINECONE_ENVIRONMENT=your-pinecone-env
 
-# Database (PostgreSQL recommended for production)
-# DATABASE_URL=postgresql://user:password@localhost:5432/chatbot
+# Database (SQLite is used by default)
+DATABASE_URL=sqlite:///db.sqlite3
 
 # Optional
 DEBUG=True
