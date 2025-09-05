@@ -18,10 +18,10 @@ A backend-only AI chatbot service implementing Retrieval-Augmented Generation (R
 - **REST API**: Complete API for frontend integration
 
 ### Technical Features
-- **RAG Implementation**: Document retrieval integrated with Mistral AI (primary). (No other AI providers used.)
-- **Vector Search**: Pinecone/FAISS-based semantic document search
+- **RAG Implementation**: Document retrieval integrated with Mistral AI
+- **Vector Search**: Pinecon-based semantic document search
 - **JWT Security**: Access and refresh token management
-- **Database**: PostgreSQL/SQLite for user data and chat history
+- **Database**: SQLite for user data and chat history
 - **Background Processing**: APScheduler for automated tasks
 - **API Documentation**: Comprehensive Postman collection included
 
@@ -45,8 +45,8 @@ A backend-only AI chatbot service implementing Retrieval-Augmented Generation (R
 ## 🛠️ Tech Stack
 
 - **Backend**: Django REST Framework
-- **Database**: PostgreSQL (production) / SQLite (development)
-- **AI Model**: Mistral AI for response generation and embeddings (sole provider).
+- **Database**: SQLite
+- **AI Model**: Mistral AI for response generation and embeddings.
 - **Vector DB**: Pinecone for document embeddings
 - **Authentication**: JWT (djangorestframework-simplejwt)
 - **Background Tasks**: APScheduler
@@ -76,7 +76,7 @@ A backend-only AI chatbot service implementing Retrieval-Augmented Generation (R
 
 ### Prerequisites
 - Python 3.8+
-- PostgreSQL 13+ (optional)
+
 - Redis (optional, for caching)
 
 ### Installation
@@ -121,7 +121,7 @@ PINECONE_API_KEY=your-pinecone-key
 PINECONE_ENVIRONMENT=your-pinecone-env
 
 # Database (PostgreSQL recommended for production)
-DATABASE_URL=postgresql://user:password@localhost:5432/chatbot
+# DATABASE_URL=postgresql://user:password@localhost:5432/chatbot
 
 # Optional
 DEBUG=True
@@ -248,7 +248,7 @@ This approach ensures responses are grounded in accurate, relevant information w
 ### 2. What database and model structure did you use for storing user and chat history, and why did you choose this approach?
 
 **Database Structure:**
-- **PostgreSQL**: Primary database for user data and chat history
+- **SQLite**: Primary database for user data and chat history
 - **Pinecone**: Vector database for document embeddings and semantic search
 - **Redis**: Optional caching layer for session management
 
@@ -330,10 +330,10 @@ The system uses a temperature-controlled generation approach to balance creativi
    - **Setup**: API key and environment configuration
    - **Integration**: pinecone-client library
 
-3. **PostgreSQL**
+3. **SQLite**
    - **Purpose**: Primary data storage
-   - **Setup**: Database URL configuration
-   - **Integration**: Django ORM with psycopg2
+   - **Setup**: Default Django configuration
+   - **Integration**: Django ORM
 
 4. **Redis** (optional)
    - **Purpose**: Session caching and background task queue
