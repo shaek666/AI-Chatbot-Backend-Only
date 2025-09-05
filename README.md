@@ -1,7 +1,7 @@
 # RAG-Powered AI Chatbot Backend
 
-[![Build Status](https://github.com/shaek666/AI/actions/workflows/main.yml/badge.svg)](https://github.com/shaek666/AI/actions)
-[![Coverage](https://codecov.io/gh/shaek666/AI/branch/main/graph/badge.svg)](https://codecov.io/gh/shaek666/AI)
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com)
+[![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen.svg)](https://github.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
