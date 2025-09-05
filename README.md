@@ -446,10 +446,10 @@ The `SnapShots/` folder contains detailed screenshots demonstrating key API endp
 
 ### 🎯 Key API Demonstrations
 
-**Most Significant GET Request - Chat History Retrieval:**
+**GET Request - Chat History Retrieval:**
 ![GET Chat History](SnapShots/GET/GET%20Get%20Chat%20History.png)
 
-**Most Significant POST Request - RAG Chat with AI:**
+**POST Request - RAG Chat with AI:**
 ![POST RAG Chat](SnapShots/POST/POST%20Chat%20with%20Rag.png)
 
 These screenshots provide visual documentation of:
