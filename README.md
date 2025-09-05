@@ -17,7 +17,7 @@ A backend-only AI chatbot service implementing Retrieval-Augmented Generation (R
 - **Background Tasks**: Automated cleanup of old chat history and email notifications
 - **REST API**: Complete API for frontend integration
 
--### Technical Features
+### Technical Features
 - **RAG Implementation**: Document retrieval integrated with Mistral AI (primary). (No other AI providers used.)
 - **Vector Search**: Pinecone/FAISS-based semantic document search
 - **JWT Security**: Access and refresh token management
@@ -55,21 +55,21 @@ A backend-only AI chatbot service implementing Retrieval-Augmented Generation (R
 ## 🏗️ System Architecture
 
 ```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   User Client   │────│   API Gateway   │────│   Auth Service  │
-│   (Frontend)    │    │   (Django)      │    │   (JWT)         │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-                                │
-                       ┌─────────────────┐
-                       │   Chat Service  │
-                       │   (RAG Pipeline)│
-                       └─────────────────┘
-                                │
-                       ┌─────────────────┐
-                       │   Document      │
-                       │   Retrieval     │
-                       │   (Pinecone)    │
-                       └─────────────────┘
+                           ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+                           │   User Client   │────│   API Gateway   │────│   Auth Service  │
+                           │   (Frontend)    │    │   (Django)      │    │   (JWT)         │
+                           └─────────────────┘    └─────────────────┘    └─────────────────┘
+                                                           │
+                                                  ┌─────────────────┐
+                                                  │   Chat Service  │
+                                                  │   (RAG Pipeline)│
+                                                  └─────────────────┘
+                                                           │
+                                                  ┌─────────────────┐
+                                                  │   Document      │
+                                                  │   Retrieval     │
+                                                  │   (Pinecone)    │
+                                                  └─────────────────┘
 ```
 
 ## 🚦 Quick Start
