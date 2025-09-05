@@ -3,18 +3,18 @@ RAG (Retrieval-Augmented Generation) Service
 ===========================================
 
 This module implements the RAG pipeline that combines document retrieval
-with AI response generation. It uses Google Gemini for embeddings and
-response generation, and Pinecone for vector storage and retrieval.
+with AI response generation using Mistral AI for embeddings and generation,
+and Pinecone for vector storage and retrieval.
 
 The RAG pipeline:
-1. Convert user query to embedding using Gemini
+1. Convert user query to embedding using Mistral AI
 2. Search similar documents in Pinecone vector database
 3. Retrieve relevant documents
 4. Generate AI response using retrieved context
 5. Return response with relevant documents
 
 Dependencies:
-- google-generativeai: For embeddings and response generation
+- mistralai: For embeddings and response generation
 - pinecone-client: For vector database operations
 """
 import os
@@ -34,7 +34,7 @@ class RAGService:
     BASE_DELAY = 2  # seconds
 
     def __init__(self):
-        """Initialize RAG service with Gemini and Pinecone connections."""
+        """Initialize RAG service with Mistral and Pinecone connections."""
 
 
         # Initialize Mistral AI for response generation
@@ -287,33 +287,13 @@ class RAGService:
 rag_service_instance = None
 
 def get_rag_service():
+    """Return singleton RAGService instance if Mistral + Pinecone configured."""
     global rag_service_instance
     if rag_service_instance is None:
-        # Initialize the service only if we have the required API keys
-        if (hasattr(settings, 'GOOGLE_API_KEY') and settings.GOOGLE_API_KEY) or \
-           (hasattr(settings, 'MISTRAL_API_KEY') and settings.MISTRAL_API_KEY):
-            try:
-                rag_service_instance = RAGService()
-            except Exception as e:
-                print(f"Error initializing RAG service: {e}")
-                rag_service_instance = None
-        else:
-            print("Neither Google API Key nor Mistral API Key found. RAG service will not be available.")
-            rag_service_instance = None
-    return rag_service_instance
-    
+        pinecone_api_key = getattr(settings, 'PINECONE_API_KEY', None)
+        mistral_api_key = getattr(settings, 'MISTRAL_API_KEY', None)
 
-
-rag_service_instance = None
-
-def get_rag_service():
-    global rag_service_instance
-    if rag_service_instance is None:
-        # google_api_key = settings.GOOGLE_API_KEY # Removed
-        pinecone_api_key = settings.PINECONE_API_KEY
-        mistral_api_key = settings.MISTRAL_API_KEY
-
-        if (mistral_api_key and pinecone_api_key):
+        if mistral_api_key and pinecone_api_key:
             try:
                 rag_service_instance = RAGService()
             except Exception as e:

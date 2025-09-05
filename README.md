@@ -17,8 +17,8 @@ A backend-only AI chatbot service implementing Retrieval-Augmented Generation (R
 - **Background Tasks**: Automated cleanup of old chat history and email notifications
 - **REST API**: Complete API for frontend integration
 
-### Technical Features
-- **RAG Implementation**: Document retrieval with OpenAI GPT integration
+-### Technical Features
+- **RAG Implementation**: Document retrieval integrated with Mistral AI (primary). (No other AI providers used.)
 - **Vector Search**: Pinecone/FAISS-based semantic document search
 - **JWT Security**: Access and refresh token management
 - **Database**: PostgreSQL/SQLite for user data and chat history
@@ -46,7 +46,7 @@ A backend-only AI chatbot service implementing Retrieval-Augmented Generation (R
 
 - **Backend**: Django REST Framework
 - **Database**: PostgreSQL (production) / SQLite (development)
-- **AI Model**: OpenAI GPT-3.5/4 for response generation
+- **AI Model**: Mistral AI for response generation and embeddings (sole provider).
 - **Vector DB**: Pinecone for document embeddings
 - **Authentication**: JWT (djangorestframework-simplejwt)
 - **Background Tasks**: APScheduler
@@ -116,7 +116,7 @@ python manage.py runserver
 ```bash
 # Required
 SECRET_KEY=your-secret-key
-OPENAI_API_KEY=your-openai-api-key
+MISTRAL_API_KEY=your-mistral-api-key
 PINECONE_API_KEY=your-pinecone-key
 PINECONE_ENVIRONMENT=your-pinecone-env
 
@@ -238,10 +238,10 @@ pytest --cov=chat --cov=users --cov=rag
 The RAG pipeline integrates document retrieval with AI generation through these steps:
 
 1. **Document Storage**: Documents are chunked and stored with vector embeddings in Pinecone
-2. **Query Processing**: User queries are converted to embeddings using OpenAI's text-embedding model
+2. **Query Processing**: User queries are converted to embeddings using Mistral AI's embedding model.
 3. **Document Retrieval**: Semantic search finds the most relevant documents based on query similarity
 4. **Context Assembly**: Retrieved documents provide relevant context for response generation
-5. **AI Generation**: OpenAI GPT generates contextual responses using the retrieved information
+5. **AI Generation**: Mistral AI generates contextual responses using the retrieved information.
 
 This approach ensures responses are grounded in accurate, relevant information while maintaining natural conversation flow.
 
@@ -282,7 +282,7 @@ This approach provides scalability, data integrity, and efficient querying capab
 1. **Query Embedding**: Convert user query to vector embedding
 2. **Document Search**: Find top-k most relevant documents using cosine similarity
 3. **Context Building**: Combine retrieved documents into context prompt
-4. **AI Generation**: Use OpenAI GPT-3.5/4 to generate contextual response
+4. **AI Generation**: Use Mistral AI to generate contextual response
 5. **Response Formatting**: Structure response for API consumption
 
 The system uses a temperature-controlled generation approach to balance creativity with accuracy.
@@ -320,10 +320,10 @@ The system uses a temperature-controlled generation approach to balance creativi
 
 **External Services:**
 
-1. **OpenAI API**
-   - **Purpose**: Text embeddings and GPT response generation
-   - **Setup**: API key configuration in environment variables
-   - **Integration**: openai Python library
+1. **Mistral AI**
+   - **Purpose**: Provider for text embeddings and response generation
+   - **Setup**: API key configuration in environment variables (MISTRAL_API_KEY)
+   - **Integration**: use the Mistral SDK or HTTP client
 
 2. **Pinecone**
    - **Purpose**: Vector database for document search
