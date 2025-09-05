@@ -24,6 +24,11 @@
       "key": "jwt_token",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "session_id",
+      "value": "1",
+      "type": "string"
     }
   ],
   "item": [
@@ -209,9 +214,9 @@
               "raw": "{\n  \"content\": \"Hello, how are you?\"\n}"
             },
             "url": {
-              "raw": "{{BASE_URL}}/api/chat/sessions/1/messages/"
+              "raw": "{{BASE_URL}}/api/chat/sessions/{{session_id}}/messages/"
             },
-            "description": "Send a message to a specific chat session."
+            "description": "Send a message to a specific chat session.\n\nInstructions:\n1. First create a chat session using 'Create Chat Session' endpoint\n2. Copy the session ID from the response\n3. Update the {{session_id}} variable in Postman\n4. Use this endpoint to send messages to that specific session"
           }
         }
       ]
@@ -259,7 +264,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"message\": \"What is Artificial Intelligence?\",\n  \"session_id\": null\n}"
+              "raw": "{\n  \"message\": \"What is Artificial Intelligence?\",\n  \"session_id\": {{session_id}}\n}"
             },
             "url": {
               "raw": "{{BASE_URL}}/api/rag/chat/"

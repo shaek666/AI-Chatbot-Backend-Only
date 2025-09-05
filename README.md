@@ -391,6 +391,10 @@ ai-chatbot-backend/
 │   ├── test_auth.py      # Authentication tests
 │   ├── test_chat.py      # Chat tests
 │   └── test_rag.py       # RAG tests
+├── SnapShots/              # API Documentation Screenshots
+│   ├── GET/               # GET request screenshots
+│   ├── POST/              # POST request screenshots
+│   └── jwt_token.png      # JWT authentication example
 ├── requirements.txt        # Python dependencies
 └── README.md             # This documentation
 ```
@@ -414,8 +418,43 @@ For support and questions:
 - Check the troubleshooting guide in the documentation
 - Review API documentation at `http://localhost:8000/api/docs/`
 
-## 📦 Postman Collection
+## 📦 Postman Collection & API Documentation
 
 A comprehensive Postman collection is included: `ai_chatbot_postman_collection.json`
 
 Import this collection to test all API endpoints with pre-configured requests and environment variables.
+
+### 📸 API Documentation Screenshots
+
+The `SnapShots/` folder contains detailed screenshots demonstrating key API endpoints and their responses:
+
+#### 🔍 GET Requests
+- **Get Chat History** - Shows retrieval of user's complete chat history
+- **Send Message to Session** - Displays GET request for session messages
+
+#### 📮 POST Requests
+- **User Registration** - Demonstrates new user signup process
+- **User Login** - Shows JWT token generation and authentication
+- **Email Verification** - Displays email verification flow
+- **Create Chat Session** - Shows new chat session creation
+- **Send Message to Session** - Demonstrates sending messages to specific sessions
+- **Chat with RAG** - Shows RAG-powered intelligent response generation
+- **Index Documents** - Displays document indexing for knowledge base updates
+
+#### 🔐 Authentication
+- **JWT Token** - Shows JWT token structure and usage in requests
+
+### 🎯 Key API Demonstrations
+
+**Most Significant GET Request - Chat History Retrieval:**
+![GET Chat History](SnapShots/GET/GET%20Get%20Chat%20History.png)
+
+**Most Significant POST Request - RAG Chat with AI:**
+![POST RAG Chat](SnapShots/POST/POST%20Chat%20with%20Rag.png)
+
+These screenshots provide visual documentation of:
+- Request structure and headers
+- JSON payloads and parameters
+- Successful response formats
+- Error handling examples
+- Authentication token usage

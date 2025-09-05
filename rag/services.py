@@ -106,7 +106,9 @@ class RAGService:
                 embedding = embedding_response.data[0].embedding
                 return embedding
             except MistralAPIStatusException as e:
-                if e.status_code == 429:
+                # Check if it's a rate limit error (429)
+                status_code = getattr(e, 'status_code', None) or getattr(e, 'code', None)
+                if status_code == 429:
                     retries += 1
                     if retries < self.MAX_RETRIES:
                         print(f"Mistral embedding rate limit exceeded. Retrying in {delay} seconds... (attempt {retries}/{self.MAX_RETRIES})")
@@ -232,7 +234,9 @@ class RAGService:
                 response = chat_response.choices[0].message.content
                 return response
             except MistralAPIStatusException as e:
-                if e.status_code == 429:
+                # Check if it's a rate limit error (429)
+                status_code = getattr(e, 'status_code', None) or getattr(e, 'code', None)
+                if status_code == 429:
                     retries += 1
                     if retries < self.MAX_RETRIES:
                         print(f"Mistral chat rate limit exceeded. Retrying in {delay} seconds... (attempt {retries}/{self.MAX_RETRIES})")
@@ -285,6 +289,27 @@ rag_service_instance = None
 def get_rag_service():
     global rag_service_instance
     if rag_service_instance is None:
+        # Initialize the service only if we have the required API keys
+        if (hasattr(settings, 'GOOGLE_API_KEY') and settings.GOOGLE_API_KEY) or \
+           (hasattr(settings, 'MISTRAL_API_KEY') and settings.MISTRAL_API_KEY):
+            try:
+                rag_service_instance = RAGService()
+            except Exception as e:
+                print(f"Error initializing RAG service: {e}")
+                rag_service_instance = None
+        else:
+            print("Neither Google API Key nor Mistral API Key found. RAG service will not be available.")
+            rag_service_instance = None
+    return rag_service_instance
+    
+
+
+rag_service_instance = None
+
+def get_rag_service():
+    global rag_service_instance
+    if rag_service_instance is None:
+        # google_api_key = settings.GOOGLE_API_KEY # Removed
         pinecone_api_key = settings.PINECONE_API_KEY
         mistral_api_key = settings.MISTRAL_API_KEY
 
