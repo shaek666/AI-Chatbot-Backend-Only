@@ -371,34 +371,34 @@ The system uses a temperature-controlled generation approach to balance creativi
 ```
 ai-chatbot-backend/
 ├── config/                 # Django configuration
-│   ├── settings.py        # Main settings
-│   ├── urls.py           # URL routing
-│   └── wsgi.py           # WSGI application
+│   ├── settings.py         # Main settings
+│   ├── urls.py             # URL routing
+│   └── wsgi.py             # WSGI application
 ├── users/                  # User management
-│   ├── models.py         # User models
-│   ├── views.py          # Authentication views
-│   └── serializers.py    # User serialization
+│   ├── models.py           # User models
+│   ├── views.py            # Authentication views
+│   └── serializers.py      # User serialization
 ├── chat/                   # Chat functionality
-│   ├── models.py         # Chat models
-│   ├── views.py          # Chat views
-│   └── services.py       # Chat services
+│   ├── models.py           # Chat models
+│   ├── views.py            # Chat views
+│   └── services.py         # Chat services
 ├── rag/                    # RAG pipeline
-│   ├── models.py         # Document models
-│   ├── views.py          # RAG views
-│   └── services.py       # RAG services
+│   ├── models.py           # Document models
+│   ├── views.py            # RAG views
+│   └── services.py         # RAG services
 ├── background_tasks/       # Background processing
-│   ├── scheduler.py      # Task scheduling
-│   └── tasks.py          # Background tasks
+│   ├── scheduler.py        # Task scheduling
+│   └── tasks.py            # Background tasks
 ├── tests/                  # Test suite
-│   ├── test_auth.py      # Authentication tests
-│   ├── test_chat.py      # Chat tests
-│   └── test_rag.py       # RAG tests
+│   ├── test_auth.py        # Authentication tests
+│   ├── test_chat.py        # Chat tests
+│   └── test_rag.py         # RAG tests
 ├── SnapShots/              # API Documentation Screenshots
-│   ├── GET/               # GET request screenshots
-│   ├── POST/              # POST request screenshots
-│   └── jwt_token.png      # JWT authentication example
+│   ├── GET/                # GET request screenshots
+│   ├── POST/               # POST request screenshots
+│   └── jwt_token.png       # JWT authentication example
 ├── requirements.txt        # Python dependencies
-└── README.md             # This documentation
+└── README.md               # This documentation
 ```
 
 ## 🤝 Contributing
