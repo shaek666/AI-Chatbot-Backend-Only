@@ -77,6 +77,8 @@ A backend-only AI chatbot service implementing Retrieval-Augmented Generation (R
 ### Prerequisites
 - Python 3.8+
 
+- SQLite3
+
 - Redis (optional, for caching)
 
 ### Installation
