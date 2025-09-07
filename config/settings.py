@@ -158,10 +158,7 @@ SIMPLE_JWT = {
 }
 
 # CORS settings
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-]
+CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='http://localhost:3000,http://127.0.0.1:3000', cast=lambda v: [s.strip() for s in v.split(',')])
 
 # Email settings (for verification emails)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -192,5 +189,38 @@ USE_FAKE_REDIS = config('USE_FAKE_REDIS', default=True, cast=bool)
 # Add this near the top of the file
 AUTH_USER_MODEL = 'users.User'
 
-# Enable background tasks for development
-DISABLE_BACKGROUND_TASKS = False
+# Background tasks configuration
+DISABLE_BACKGROUND_TASKS = config('DISABLE_BACKGROUND_TASKS', default=False, cast=bool)
+
+# Logging configuration
+LOG_LEVEL = config('LOG_LEVEL', default='INFO')
+
+# File upload settings
+MAX_UPLOAD_SIZE = config('MAX_UPLOAD_SIZE', default=10485760, cast=int)  # 10MB
+ALLOWED_FILE_TYPES = config('ALLOWED_FILE_TYPES', default='txt,pdf,doc,docx,md', cast=lambda v: [s.strip() for s in v.split(',')])
+
+# RAG pipeline settings
+RAG_CHUNK_SIZE = config('RAG_CHUNK_SIZE', default=1000, cast=int)
+RAG_MAX_DOCUMENTS = config('RAG_MAX_DOCUMENTS', default=5, cast=int)
+RAG_RELEVANCE_THRESHOLD = config('RAG_RELEVANCE_THRESHOLD', default=0.7, cast=float)
+
+# Rate limiting settings
+RATE_LIMIT_REQUESTS_PER_MINUTE = config('RATE_LIMIT_REQUESTS_PER_MINUTE', default=1000, cast=int)
+RATE_LIMIT_REQUESTS_PER_HOUR = config('RATE_LIMIT_REQUESTS_PER_HOUR', default=10000, cast=int)
+
+# Cache settings
+CACHE_TIMEOUT = config('CACHE_TIMEOUT', default=300, cast=int)
+CACHE_KEY_PREFIX = config('CACHE_KEY_PREFIX', default='ai_chatbot')
+
+# Feature flags
+ENABLE_EMAIL_VERIFICATION = config('ENABLE_EMAIL_VERIFICATION', default=True, cast=bool)
+ENABLE_PASSWORD_RESET = config('ENABLE_PASSWORD_RESET', default=True, cast=bool)
+ENABLE_USER_PROFILES = config('ENABLE_USER_PROFILES', default=True, cast=bool)
+ENABLE_CHAT_EXPORT = config('ENABLE_CHAT_EXPORT', default=True, cast=bool)
+ENABLE_ANALYTICS = config('ENABLE_ANALYTICS', default=False, cast=bool)
+ENABLE_ADMIN_PANEL = config('ENABLE_ADMIN_PANEL', default=True, cast=bool)
+
+# Security settings for local development
+SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', default=False, cast=bool)
+CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default=False, cast=bool)
+SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=False, cast=bool)

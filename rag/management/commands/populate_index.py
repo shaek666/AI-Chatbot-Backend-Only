@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from rag.services import rag_service
+from rag.services import get_rag_service
 import os
 
 class Command(BaseCommand):
@@ -16,6 +16,7 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS(f'Starting to index documents from: {docs_dir}'))
 
+        rag_service = get_rag_service()
         if not rag_service or not rag_service.pinecone_available:
             self.stderr.write(self.style.ERROR('RAG service or Pinecone not available. Cannot populate index.'))
             return

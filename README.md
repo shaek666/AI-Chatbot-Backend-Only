@@ -1,7 +1,5 @@
 # AI Chatbot Backend with RAG Pipeline
 
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/your-username/ai-chatbot-backend)
-[![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen.svg)](https://github.com/your-username/ai-chatbot-backend)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![Django](https://img.shields.io/badge/django-4.2+-green.svg)](https://www.djangoproject.com/)
@@ -89,8 +87,8 @@ A backend-only AI chatbot service implementing Retrieval-Augmented Generation (R
 
 ```bash
 # Clone repository
-git clone https://github.com/your-username/ai-chatbot-backend.git
-cd ai-chatbot-backend
+git clone https://github.com/shaek666/AI-Chatbot-Backend-Only.git
+cd AI-Chatbot-Backend-Only
 
 # Create virtual environment
 python -m venv venv
@@ -102,7 +100,7 @@ venv\Scripts\activate     # Windows
 pip install -r requirements.txt
 
 # Configure environment
-cp .env.example .env  # Create and configure .env file
+# Create .env file with your configuration (see Environment Variables section below)
 
 # Run migrations
 python manage.py migrate
@@ -122,31 +120,105 @@ python manage.py runserver
 
 ### Environment Variables
 
-```bash
-# Required
-SECRET_KEY=your-secret-key
-MISTRAL_API_KEY=your-mistral-api-key
-PINECONE_API_KEY=your-pinecone-key
-PINECONE_ENVIRONMENT=your-pinecone-env
-PINECONE_INDEX_NAME=your-pinecone-index-name
+Create a `.env` file in the project root with the following configuration:
 
-# Optional
+```bash
+# Create .env file
+touch .env  # Linux/Mac
+# or
+echo. > .env  # Windows
+
+# Edit .env with your configuration
+nano .env  # or use your preferred editor
+```
+
+**Required Configuration:**
+- **Mistral AI API Key**: Get from https://console.mistral.ai/
+- **Pinecone API Key**: Get from https://app.pinecone.io/
+- **Email Credentials**: For user verification (optional)
+
+**Complete .env Configuration:**
+```bash
+# =============================================================================
+# AI Chatbot Backend - Local Development Environment
+# =============================================================================
+
+# =============================================================================
+# DJANGO CORE SETTINGS
+# =============================================================================
+SECRET_KEY=django-insecure-local-dev-key-change-in-production
 DEBUG=True
 ALLOWED_HOSTS=localhost,127.0.0.1
 
-# Email Configuration
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_USE_TLS=True
-EMAIL_HOST_USER=your-email@example.com
-EMAIL_HOST_PASSWORD=your-email-password
+# =============================================================================
+# AI SERVICES CONFIGURATION
+# =============================================================================
+# Mistral AI API Key - Get from https://console.mistral.ai/
+MISTRAL_API_KEY=your-mistral-api-key-here
 
-# Redis Configuration (Optional, for background tasks)
-# APScheduler can run in-memory, but for production, Redis is recommended.
+# Pinecone Configuration - Get from https://app.pinecone.io/
+PINECONE_API_KEY=your-pinecone-api-key-here
+PINECONE_ENVIRONMENT=your-pinecone-environment-here
+PINECONE_INDEX_NAME=ai-chatbot-docs
+
+# =============================================================================
+# REDIS CONFIGURATION (Local Development)
+# =============================================================================
 REDIS_HOST=localhost
 REDIS_PORT=6379
 REDIS_DB=0
 REDIS_PASSWORD=
+USE_FAKE_REDIS=True
+
+# =============================================================================
+# EMAIL CONFIGURATION
+# =============================================================================
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=your-email@gmail.com
+EMAIL_HOST_PASSWORD=your-app-password
+
+# =============================================================================
+# BACKGROUND TASKS
+# =============================================================================
+DISABLE_BACKGROUND_TASKS=False
+
+# =============================================================================
+# CORS CONFIGURATION
+# =============================================================================
+CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+
+# =============================================================================
+# LOCAL DEVELOPMENT SETTINGS
+# =============================================================================
+LOG_LEVEL=DEBUG
+MAX_UPLOAD_SIZE=10485760
+ALLOWED_FILE_TYPES=txt,pdf,doc,docx,md
+RAG_CHUNK_SIZE=1000
+RAG_MAX_DOCUMENTS=5
+RAG_RELEVANCE_THRESHOLD=0.7
+RATE_LIMIT_REQUESTS_PER_MINUTE=1000
+RATE_LIMIT_REQUESTS_PER_HOUR=10000
+CACHE_TIMEOUT=300
+CACHE_KEY_PREFIX=ai_chatbot_local
+
+# =============================================================================
+# FEATURE FLAGS
+# =============================================================================
+ENABLE_EMAIL_VERIFICATION=True
+ENABLE_PASSWORD_RESET=True
+ENABLE_USER_PROFILES=True
+ENABLE_CHAT_EXPORT=True
+ENABLE_ANALYTICS=False
+ENABLE_ADMIN_PANEL=True
+
+# =============================================================================
+# SECURITY SETTINGS (Local Development)
+# =============================================================================
+SESSION_COOKIE_SECURE=False
+CSRF_COOKIE_SECURE=False
+SECURE_SSL_REDIRECT=False
 ```
 
 ## 📖 API Documentation
@@ -176,13 +248,12 @@ Content-Type: application/json
 
 ### Send Chat Message
 ```http
-POST /api/chat/messages/
+POST /api/chat/sessions/1/messages/
 Authorization: Bearer <jwt-token>
 Content-Type: application/json
 
 {
-  "session_id": 1,
-  "message": "What is machine learning?"
+  "content": "What is machine learning?"
 }
 ```
 
@@ -210,7 +281,16 @@ Authorization: Bearer <jwt-token>
 
 ## 🧪 Testing
 
-Run the comprehensive test suite:
+The project includes comprehensive tests covering:
+
+- **Authentication**: User registration, login, email verification, JWT tokens
+- **Chat functionality**: Session management, message handling, history retrieval
+- **RAG pipeline**: Document indexing, retrieval, AI response generation
+- **Background tasks**: Cleanup operations, email notifications
+- **API endpoints**: All REST endpoints with proper error handling
+- **Performance**: Response time and latency testing
+
+Run tests with:
 
 ```bash
 # Run all tests
@@ -220,9 +300,10 @@ python manage.py test
 python manage.py test tests.test_auth
 python manage.py test tests.test_chat
 python manage.py test tests.test_rag
+python manage.py test tests.test_rag_functionality
 
-# Run with coverage
-pytest --cov=chat --cov=users --cov=rag
+# Run with coverage (requires pytest-cov)
+pytest --cov=chat --cov=users --cov=rag --cov-report=html
 ```
 
 ## 📊 Database Schema
@@ -292,7 +373,7 @@ This approach provides scalability, data integrity, and efficient querying capab
 ### 3. How did you implement user authentication using JWT? What security measures did you take for handling passwords and tokens?
 
 **JWT Implementation:**
-- **Access tokens**: 15-minute lifetime for API access
+- **Access tokens**: 60-minute lifetime for API access
 - **Refresh tokens**: 7-day lifetime for session renewal
 - **Token rotation**: Automatic refresh token rotation on use
 - **Blacklisting**: Invalidated tokens after refresh
@@ -304,7 +385,7 @@ This approach provides scalability, data integrity, and efficient querying capab
 - **CORS configuration**: Strict origin policies for API access
 - **Input validation**: Comprehensive request validation and sanitization
 
-### 4. How does the chatbot generate responses using the AI model (GPT-3 [for this project Mistral AI]) after retrieving documents?
+### 4. How does the chatbot generate responses using the AI model (Mistral AI) after retrieving documents?
 
 **Response Generation Process:**
 
@@ -327,6 +408,8 @@ The system uses a temperature-controlled generation approach to balance creativi
 **Task Schedule:**
 - **Daily at 2:00 AM UTC**: Clean messages older than 30 days
 - **Daily at 3:00 AM UTC**: Clean expired verification tokens
+- **Daily at 8:00 AM UTC**: Send daily activity report
+- **Weekly on Sunday at 1:00 AM UTC**: Backup chat data
 - **Real-time**: Email verification on user registration
 
 ### 6. What testing strategies did you use to ensure the functionality of the chatbot, authentication, and background tasks?
@@ -339,11 +422,13 @@ The system uses a temperature-controlled generation approach to balance creativi
 - **Mock tests**: External API mocking for consistent testing
 
 **Test Coverage:**
-- **Authentication flow**: Registration, login, token refresh
-- **Chat functionality**: Message sending, history retrieval
-- **RAG pipeline**: Document retrieval, AI response generation
-- **Background tasks**: Task scheduling and execution
+- **Authentication flow**: Registration, login, token refresh, email verification
+- **Chat functionality**: Message sending, history retrieval, session management
+- **RAG pipeline**: Document retrieval, AI response generation, fallback responses
+- **Background tasks**: Task scheduling and execution, cleanup operations
 - **Error handling**: Edge cases and failure scenarios
+- **API endpoints**: All REST endpoints with proper authentication
+- **Performance**: Response time and latency testing
 
 ### 7. What external services (APIs, databases, search engines) did you integrate, and how did you set up and configure them?
 
@@ -437,6 +522,22 @@ ai-chatbot-backend/
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
+## 🧪 Running Tests
+
+```bash
+# Run all tests
+python manage.py test
+
+# Run specific test modules
+python manage.py test tests.test_auth
+python manage.py test tests.test_chat
+python manage.py test tests.test_rag
+python manage.py test tests.test_rag_functionality
+
+# Run with coverage (requires pytest-cov)
+pytest --cov=chat --cov=users --cov=rag --cov-report=html
+```
+
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
@@ -444,15 +545,19 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Support
 
 For support and questions:
-- Create an issue on [GitHub Issues](https://github.com/your-username/ai-chatbot-backend/issues)
 - Check the troubleshooting guide in the documentation
 - Review API documentation at `http://localhost:8000/api/docs/`
+- Test API endpoints using the included Postman collection
 
 ## 📦 Postman Collection & API Documentation
 
 A comprehensive Postman collection is included: `ai_chatbot_postman_collection.json`
 
 Import this collection to test all API endpoints with pre-configured requests and environment variables.
+
+### Interactive API Documentation
+
+Visit `http://localhost:8000/api/docs/` for interactive Swagger UI documentation when the server is running.
 
 ### 📸 API Documentation Screenshots
 
