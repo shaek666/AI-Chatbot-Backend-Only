@@ -30,7 +30,7 @@ A backend-only AI chatbot service implementing Retrieval-Augmented Generation (R
 ### Authentication
 - `POST /api/auth/register/` - User registration
 - `POST /api/auth/login/` - User login with JWT tokens
-- `POST /api/auth/refresh/` - Refresh JWT token
+- `POST /api/token/refresh/` - Refresh JWT token
 
 ### Chat Operations
 - `GET /api/chat/history/` - Retrieve user's chat history
