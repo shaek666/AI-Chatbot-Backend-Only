@@ -299,7 +299,7 @@ This approach provides scalability, data integrity, and efficient querying capab
 - **CORS configuration**: Strict origin policies for API access
 - **Input validation**: Comprehensive request validation and sanitization
 
-### 4. How does the chatbot generate responses using the AI model (Mistral AI) after retrieving documents?
+### 4. How does the chatbot generate responses using the AI model (GPT-3 (for this project Mistral AI)) after retrieving documents?
 
 **Response Generation Process:**
 
