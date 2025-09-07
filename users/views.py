@@ -4,17 +4,19 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model, authenticate
 from django.utils import timezone
-from django.core.mail import send_mail
 from django.conf import settings
 from background_tasks.tasks import send_mail_async
 import secrets
 import string
-from .models import EmailVerification
+from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
+from .models import EmailVerification, PasswordResetToken
 from .serializers import (
     UserRegistrationSerializer, 
     UserLoginSerializer, 
     UserSerializer,
-    EmailVerificationSerializer
+    EmailVerificationSerializer,
+    PasswordResetRequestSerializer,
+    SetNewPasswordSerializer
 )
 
 User = get_user_model()
@@ -23,6 +25,7 @@ class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserRegistrationSerializer
     permission_classes = [AllowAny]
+    throttle_classes = [AnonRateThrottle]
     
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -67,6 +70,7 @@ class RegisterView(generics.CreateAPIView):
 class LoginView(generics.GenericAPIView):
     serializer_class = UserLoginSerializer
     permission_classes = [AllowAny]
+    throttle_classes = [AnonRateThrottle]
     
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -90,6 +94,7 @@ class LoginView(generics.GenericAPIView):
 class VerifyEmailView(generics.GenericAPIView):
     serializer_class = EmailVerificationSerializer
     permission_classes = [AllowAny]
+    throttle_classes = [AnonRateThrottle]
     
     def get_token_from_request(self, request):
         """Get token from request data or URL parameter"""
@@ -152,6 +157,81 @@ class VerifyEmailView(generics.GenericAPIView):
 class UserProfileView(generics.RetrieveUpdateAPIView):
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
+    throttle_classes = [UserRateThrottle]
     
     def get_object(self):
         return self.request.user
+
+
+class RequestPasswordResetView(generics.GenericAPIView):
+    serializer_class = PasswordResetRequestSerializer
+    permission_classes = [AllowAny]
+    throttle_classes = [AnonRateThrottle]
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data['email']
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({'message': 'If an account with that email exists, a password reset link has been sent.'},
+                            status=status.HTTP_200_OK)
+
+        # Delete any existing tokens for this user
+        PasswordResetToken.objects.filter(user=user).delete()
+
+        token = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(64))
+        expires_at = timezone.now() + timezone.timedelta(hours=1)  # Token valid for 1 hour
+
+        PasswordResetToken.objects.create(
+            user=user,
+            token=token,
+            expires_at=expires_at
+        )
+
+        reset_url = request.build_absolute_uri(f'/api/auth/reset-password/confirm/{token}/')
+
+        send_mail_async(
+            'Password Reset Request',
+            f'Please use the following link to reset your password: {reset_url}',
+            settings.EMAIL_HOST_USER,
+            [user.email]
+        )
+
+        return Response({'message': 'If an account with that email exists, a password reset link has been sent.'},
+                        status=status.HTTP_200_OK)
+
+
+class ConfirmPasswordResetView(generics.GenericAPIView):
+    serializer_class = SetNewPasswordSerializer
+    permission_classes = [AllowAny]
+    throttle_classes = [AnonRateThrottle]
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        token = serializer.validated_data['token']
+        password = serializer.validated_data['password']
+
+        try:
+            reset_token = PasswordResetToken.objects.get(token=token)
+        except PasswordResetToken.DoesNotExist:
+            return Response({'error': 'Invalid or expired password reset token.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        if reset_token.is_expired():
+            reset_token.delete()
+            return Response({'error': 'Invalid or expired password reset token.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        user = reset_token.user
+        user.set_password(password)
+        user.save()
+
+        reset_token.delete()  # Invalidate the token after use
+
+        return Response({'message': 'Password has been reset successfully.'},
+                        status=status.HTTP_200_OK)

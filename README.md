@@ -32,6 +32,8 @@ A backend-only AI chatbot service implementing Retrieval-Augmented Generation (R
 - `GET /api/auth/profile/` - Get user profile
 - `POST /api/auth/verify-email/` - Verify user email
 - `POST /api/auth/verify-email/<str:token>/` - Verify user email with token
+- `POST /api/auth/reset-password/request/` - Request a password reset email
+- `POST /api/auth/reset-password/confirm/<str:token>/` - Confirm password reset with token and set new password
 
 ### Chat Operations
 - `GET, POST /api/chat/sessions/` - List and create chat sessions
@@ -81,7 +83,7 @@ A backend-only AI chatbot service implementing Retrieval-Augmented Generation (R
 
 - SQLite3
 
-- Redis (optional, for caching)
+- Redis (optional, for background task scheduling and caching)
 
 ### Installation
 
@@ -289,6 +291,7 @@ pytest --cov=chat --cov=users --cov=rag --cov-report=html
 - `is_verified`: Boolean indicating if email has been verified
 - `is_active`: Account status
 - `created_at`: Registration timestamp
+- `updated_at`: Timestamp when user was last updated
 
 ### ChatSession Model (`chat.ChatSession`)
 - `id`: Session identifier
@@ -353,7 +356,7 @@ This approach provides scalability, data integrity, and efficient querying capab
 
 **Security Measures:**
 - **Password hashing**: Django's built-in PBKDF2 algorithm
-- **Rate limiting**: API endpoint protection against brute force attacks
+- **Rate limiting**: API endpoint protection against brute force attacks using Django REST Framework's throttling. Configured via `RATE_LIMIT_REQUESTS_PER_MINUTE` and `RATE_LIMIT_REQUESTS_PER_HOUR` in `.env`.
 - **CORS configuration**: Configurable origin policies for API access
 - **Input validation**: Comprehensive request validation and sanitization
 - **JWT token security**: Token rotation and blacklisting

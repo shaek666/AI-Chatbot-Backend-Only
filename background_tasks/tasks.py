@@ -76,13 +76,50 @@ def send_daily_activity_report():
     }
 
 def backup_chat_data():
-    """Create backup of chat data (placeholder for actual backup logic)"""
-    # This is a placeholder - in production, you'd implement actual backup logic
-    backup_file = f"chat_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-    
-    # Export data logic would go here
-    print(f"Backup created: {backup_file}")
-    return {'backup_file': backup_file}
+    """Create backup of chat data using Django's dumpdata command."""
+    try:
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        backup_dir = os.path.join(settings.BASE_DIR, 'backups')
+        os.makedirs(backup_dir, exist_ok=True)
+        backup_file_name = f"chat_backup_{timestamp}.json"
+        backup_file_path = os.path.join(backup_dir, backup_file_name)
+
+        # Use Django's dumpdata command to export data
+        # This requires running as a management command, which is not directly
+        # feasible within this script's current execution context.
+        # For a robust solution, this task should ideally be triggered via
+        # a custom Django management command that calls this function,
+        # or by using Django's call_command.
+
+        # For demonstration purposes, we'll simulate the dumpdata output
+        # In a real scenario, you'd use subprocess.run(['python', 'manage.py', 'dumpdata', ...])
+        # or django.core.management.call_command('dumpdata', ...)
+
+        # To make this function runnable directly for testing, we'll fetch data manually
+        # This is less efficient than dumpdata for large datasets but works without
+        # needing to run a separate management command.
+
+        from django.core import serializers
+        from users.models import User
+        from chat.models import ChatSession, Message, Document
+
+        all_data = []
+        all_data.extend(User.objects.all())
+        all_data.extend(ChatSession.objects.all())
+        all_data.extend(Message.objects.all())
+        all_data.extend(Document.objects.all())
+
+        serialized_data = serializers.serialize('json', all_data, indent=2)
+
+        with open(backup_file_path, 'w') as f:
+            f.write(serialized_data)
+
+        print(f"Backup created successfully: {backup_file_path}")
+        return {'backup_file': backup_file_path, 'status': 'success'}
+    except Exception as e:
+        print(f"Error creating backup: {e}")
+        return {'status': 'error', 'message': str(e)}
+
 
 def send_mail_async(subject, message, from_email, recipient_list, fail_silently=False):
     """Send email asynchronously using Django's send_mail function."""

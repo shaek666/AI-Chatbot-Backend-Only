@@ -2,6 +2,7 @@
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.throttling import UserRateThrottle
 from django.shortcuts import get_object_or_404
 from django.conf import settings
 from chat.models import ChatSession, Message
@@ -11,6 +12,7 @@ import time
 
 class ChatBotView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
+    throttle_classes = [UserRateThrottle]
     
     def post(self, request, *args, **kwargs):
         user_message = request.data.get('message')
@@ -93,6 +95,7 @@ class ChatBotView(generics.GenericAPIView):
 
 class DocumentIndexView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
+    throttle_classes = [UserRateThrottle]
     
     def post(self, request, *args, **kwargs):
         documents = request.data.get('documents', [])

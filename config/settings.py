@@ -124,6 +124,10 @@ STATIC_URL = 'static/'
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Rate limiting settings
+RATE_LIMIT_REQUESTS_PER_MINUTE = config('RATE_LIMIT_REQUESTS_PER_MINUTE', default=1000, cast=int)
+RATE_LIMIT_REQUESTS_PER_HOUR = config('RATE_LIMIT_REQUESTS_PER_HOUR', default=10000, cast=int)
+
 # REST Framework settings
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
@@ -135,6 +139,14 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': f"{RATE_LIMIT_REQUESTS_PER_MINUTE}/minute",
+        'user': f"{RATE_LIMIT_REQUESTS_PER_HOUR}/hour"
+    }
 }
 
 # DRF Spectacular configuration
@@ -204,10 +216,6 @@ RAG_CHUNK_SIZE = config('RAG_CHUNK_SIZE', default=1000, cast=int)
 RAG_MAX_DOCUMENTS = config('RAG_MAX_DOCUMENTS', default=5, cast=int)
 RAG_RELEVANCE_THRESHOLD = config('RAG_RELEVANCE_THRESHOLD', default=0.7, cast=float)
 
-# Rate limiting settings
-RATE_LIMIT_REQUESTS_PER_MINUTE = config('RATE_LIMIT_REQUESTS_PER_MINUTE', default=1000, cast=int)
-RATE_LIMIT_REQUESTS_PER_HOUR = config('RATE_LIMIT_REQUESTS_PER_HOUR', default=10000, cast=int)
-
 # Cache settings
 CACHE_TIMEOUT = config('CACHE_TIMEOUT', default=300, cast=int)
 CACHE_KEY_PREFIX = config('CACHE_KEY_PREFIX', default='ai_chatbot')
@@ -224,3 +232,4 @@ ENABLE_ADMIN_PANEL = config('ENABLE_ADMIN_PANEL', default=True, cast=bool)
 SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', default=False, cast=bool)
 CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default=False, cast=bool)
 SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=False, cast=bool)
+

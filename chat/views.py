@@ -1,6 +1,7 @@
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.throttling import UserRateThrottle
 from django.db.models import Q
 from .models import ChatSession, Message, Document
 from .serializers import (
@@ -14,6 +15,7 @@ from rag.services import get_rag_service
 class ChatSessionListCreateView(generics.ListCreateAPIView):
     serializer_class = ChatSessionSerializer
     permission_classes = [IsAuthenticated]
+    throttle_classes = [UserRateThrottle]
     
     def get_queryset(self):
         return ChatSession.objects.filter(user=self.request.user)
@@ -37,13 +39,15 @@ class ChatSessionListCreateView(generics.ListCreateAPIView):
 class ChatSessionDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ChatSessionSerializer
     permission_classes = [IsAuthenticated]
+    throttle_classes = [UserRateThrottle]
     
     def get_queryset(self):
         return ChatSession.objects.filter(user=self.request.user)
 
 class MessageListView(generics.ListCreateAPIView):
     serializer_class = MessageSerializer
-    permission_classes = [IsAuthenticated]  # Fixed the syntax error here
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [UserRateThrottle]
     
     def get_queryset(self):
         session_id = self.kwargs.get('session_id')
@@ -96,6 +100,7 @@ class MessageListView(generics.ListCreateAPIView):
 class ChatHistoryView(generics.ListAPIView):
     serializer_class = ChatSessionSerializer
     permission_classes = [IsAuthenticated]
+    throttle_classes = [UserRateThrottle]
     
     def get_queryset(self):
         return ChatSession.objects.filter(user=self.request.user)
@@ -120,3 +125,4 @@ class DocumentListCreateView(generics.ListCreateAPIView):
     queryset = Document.objects.all()
     serializer_class = DocumentSerializer
     permission_classes = [IsAuthenticated]
+    throttle_classes = [UserRateThrottle]
