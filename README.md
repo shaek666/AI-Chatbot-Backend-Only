@@ -19,7 +19,7 @@ A backend-only AI chatbot service implementing Retrieval-Augmented Generation (R
 
 ### Technical Features
 - **RAG Implementation**: Document retrieval integrated with Mistral AI
-- **Vector Search**: Pinecon-based semantic document search
+- **Vector Search**: Pinecone-based semantic document search
 - **JWT Security**: Access and refresh token management
 - **Database**: SQLite for user data and chat history
 - **Background Processing**: APScheduler for automated tasks
@@ -35,12 +35,11 @@ A backend-only AI chatbot service implementing Retrieval-Augmented Generation (R
 ### Chat Operations
 - `GET /api/chat/history/` - Retrieve user's chat history
 - `POST /api/chat/sessions/` - Create new chat session
-- `POST /api/chat/messages/` - Send message to chatbot
-- `DELETE /api/chat/sessions/{id}/` - Delete chat session
+- `POST /api/chat/sessions/<int:session_id>/messages/` - Send message to a session
+- `DELETE /api/chat/sessions/<int:pk>/` - Delete chat session
 
 ### Document Management
-- `GET /api/rag/search/` - Search documents
-- `POST /api/rag/index/` - Index new documents
+- `POST /api/rag/index-documents/` - Index new documents
 
 ## 🛠️ Tech Stack
 
@@ -106,8 +105,11 @@ python manage.py migrate
 # Create superuser (optional)
 python manage.py createsuperuser
 
-# Index initial documents
+# Index initial documents (pre-defined FAQs, etc.)
 python manage.py populate_documents
+
+# Index your own documents from a directory
+python manage.py populate_index /path/to/your/documents
 
 # Start development server
 python manage.py runserver
@@ -121,14 +123,25 @@ SECRET_KEY=your-secret-key
 MISTRAL_API_KEY=your-mistral-api-key
 PINECONE_API_KEY=your-pinecone-key
 PINECONE_ENVIRONMENT=your-pinecone-env
-
-# Database (SQLite is used by default)
-DATABASE_URL=sqlite:///db.sqlite3
+PINECONE_INDEX_NAME=your-pinecone-index-name
 
 # Optional
 DEBUG=True
 ALLOWED_HOSTS=localhost,127.0.0.1
-REDIS_URL=redis://localhost:6379/0
+
+# Email Configuration
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=your-email@example.com
+EMAIL_HOST_PASSWORD=your-email-password
+
+# Redis Configuration (for background tasks)
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_DB=0
+REDIS_PASSWORD=
+USE_FAKE_REDIS=True
 ```
 
 ## 📖 API Documentation
@@ -177,14 +190,18 @@ Authorization: Bearer <jwt-token>
 ## 🔄 Background Tasks
 
 ### Automated Cleanup
-- **Chat History Cleanup**: Daily removal of messages older than 30 days
-- **Token Cleanup**: Daily removal of expired verification tokens
-- **Email Notifications**: User verification emails after registration
+- **Chat History Cleanup**: Daily removal of messages older than 30 days.
+- **Token Cleanup**: Daily removal of expired verification tokens.
+- **Daily Activity Report**: Sends a daily report of platform activity to the admin.
+- **Weekly Backup**: Performs a weekly backup of chat data.
+- **Email Notifications**: User verification emails after registration.
 
 ### Task Schedule
-- **Daily at 2 AM**: Clean old chat history
-- **Daily at 3 AM**: Clean expired tokens
-- **On registration**: Send verification email
+- **Daily at 2 AM**: Clean old chat history.
+- **Daily at 3 AM**: Clean expired tokens.
+- **Daily at 8 AM**: Send a daily activity report.
+- **Weekly on Sunday at 1 AM**: Backup chat data.
+- **On registration**: Send verification email.
 
 ## 🧪 Testing
 
@@ -205,33 +222,38 @@ pytest --cov=chat --cov=users --cov=rag
 
 ## 📊 Database Schema
 
-### User Model
+### User Model (`users.User`)
 - `id`: Primary key
 - `username`: Unique username
 - `email`: Unique email address
 - `password`: Hashed password
+- `is_verified`: Boolean indicating if email has been verified
 - `is_active`: Account status
 - `created_at`: Registration timestamp
 
-### ChatSession Model
+### ChatSession Model (`chat.ChatSession`)
 - `id`: Session identifier
 - `user`: Foreign key to User
 - `title`: Session title
 - `created_at`: Creation timestamp
+- `updated_at`: Timestamp of the last update
 
-### ChatMessage Model
+### Message Model (`chat.Message`)
 - `id`: Message identifier
 - `session`: Foreign key to ChatSession
+- `message_type`: Type of message (e.g., 'user', 'bot')
 - `content`: Message content
-- `sender`: User or AI
-- `timestamp`: Message timestamp
+- `metadata`: JSON field for additional data
+- `created_at`: Message timestamp
 
-### Document Model
+### Document Model (`chat.Document`)
 - `id`: Document identifier
 - `title`: Document title
 - `content`: Document content
-- `embedding`: Vector embedding
-- `metadata`: Additional document info
+- `file_path`: Optional path to the original file
+- `file_type`: Type of document (e.g., 'txt', 'pdf')
+- `created_at`: Timestamp when document was created
+- `updated_at`: Timestamp of the last update
 
 ## 🎯 Answers to README Questions
 
@@ -277,7 +299,7 @@ This approach provides scalability, data integrity, and efficient querying capab
 - **CORS configuration**: Strict origin policies for API access
 - **Input validation**: Comprehensive request validation and sanitization
 
-### 4. How does the chatbot generate responses using the AI model (GPT-3) after retrieving documents?
+### 4. How does the chatbot generate responses using the AI model (Mistral AI) after retrieving documents?
 
 **Response Generation Process:**
 
@@ -379,13 +401,14 @@ ai-chatbot-backend/
 │   ├── views.py            # Authentication views
 │   └── serializers.py      # User serialization
 ├── chat/                   # Chat functionality
-│   ├── models.py           # Chat models
+│   ├── models.py           # Chat and Document models
 │   ├── views.py            # Chat views
-│   └── services.py         # Chat services
+│   └── urls.py             # Chat URL routing
 ├── rag/                    # RAG pipeline
-│   ├── models.py           # Document models
+│   ├── models.py           # Empty models file
 │   ├── views.py            # RAG views
-│   └── services.py         # RAG services
+│   ├── services.py         # RAG services
+│   └── urls.py             # RAG URL routing
 ├── background_tasks/       # Background processing
 │   ├── scheduler.py        # Task scheduling
 │   └── tasks.py            # Background tasks
