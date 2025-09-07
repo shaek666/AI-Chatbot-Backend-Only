@@ -300,7 +300,7 @@ pytest --cov=chat --cov=users --cov=rag --cov-report=html
 ### Message Model (`chat.Message`)
 - `id`: Message identifier
 - `session`: Foreign key to ChatSession
-- `message_type`: Type of message (e.g., 'user', 'bot')
+- `message_type`: Type of message ('user', 'bot', 'system')
 - `content`: Message content
 - `metadata`: JSON field for additional data
 - `created_at`: Message timestamp
@@ -336,10 +336,10 @@ This approach ensures responses are grounded in accurate, relevant information w
 - **Redis**: Optional caching layer for session management
 
 **Model Design:**
-- **Normalized structure** with separate User, ChatSession, and ChatMessage models
-- **Indexed fields** for fast query performance
-- **Soft deletes** to preserve data integrity
+- **Normalized structure** with separate User, ChatSession, and Message models
 - **JSON fields** for flexible metadata storage
+- **Foreign key relationships** for data integrity
+- **Timestamp fields** for tracking creation and updates
 
 This approach provides scalability, data integrity, and efficient querying capabilities.
 
@@ -353,10 +353,10 @@ This approach provides scalability, data integrity, and efficient querying capab
 
 **Security Measures:**
 - **Password hashing**: Django's built-in PBKDF2 algorithm
-- **HTTPS enforcement**: All endpoints require HTTPS in production
 - **Rate limiting**: API endpoint protection against brute force attacks
-- **CORS configuration**: Strict origin policies for API access
+- **CORS configuration**: Configurable origin policies for API access
 - **Input validation**: Comprehensive request validation and sanitization
+- **JWT token security**: Token rotation and blacklisting
 
 ### 4. How does the chatbot generate responses using the AI model (Mistral AI) after retrieving documents?
 
@@ -368,7 +368,7 @@ This approach provides scalability, data integrity, and efficient querying capab
 4. **AI Generation**: Use Mistral AI to generate contextual response
 5. **Response Formatting**: Structure response for API consumption
 
-The system uses a temperature-controlled generation approach to balance creativity with accuracy.
+The system uses Mistral AI's default generation parameters for consistent and accurate responses.
 
 ### 5. How did you schedule and implement background tasks for cleaning up old chat history, and how often do these tasks run?
 
@@ -402,6 +402,7 @@ The system uses a temperature-controlled generation approach to balance creativi
 - **Error handling**: Edge cases and failure scenarios
 - **API endpoints**: All REST endpoints with proper authentication
 - **Performance**: Response time and latency testing
+- **Integration tests**: Complete user flow testing
 
 ### 7. What external services (APIs, databases, search engines) did you integrate, and how did you set up and configure them?
 
@@ -423,9 +424,9 @@ The system uses a temperature-controlled generation approach to balance creativi
    - **Integration**: Django ORM
 
 4. **Redis** (optional)
-   - **Purpose**: Session caching and background task queue
-   - **Setup**: Redis URL configuration
-   - **Integration**: django-redis library
+   - **Purpose**: Background task coordination and caching
+   - **Setup**: Redis connection configuration
+   - **Integration**: redis library with fakeredis for development
 
 ### 8. How would you expand this chatbot to support more advanced features, such as real-time knowledge base updates or multi-user chat sessions?
 
@@ -455,36 +456,37 @@ The system uses a temperature-controlled generation approach to balance creativi
 
 ```
 ai-chatbot-backend/
-├── config/                 # Django configuration
-│   ├── settings.py         # Main settings
-│   ├── urls.py             # URL routing
-│   └── wsgi.py             # WSGI application
-├── users/                  # User management
-│   ├── models.py           # User models
-│   ├── views.py            # Authentication views
-│   └── serializers.py      # User serialization
-├── chat/                   # Chat functionality
-│   ├── models.py           # Chat and Document models
-│   ├── views.py            # Chat views
-│   └── urls.py             # Chat URL routing
-├── rag/                    # RAG pipeline
-│   ├── models.py           # Empty models file
-│   ├── views.py            # RAG views
-│   ├── services.py         # RAG services
-│   └── urls.py             # RAG URL routing
-├── background_tasks/       # Background processing
-│   ├── scheduler.py        # Task scheduling
-│   └── tasks.py            # Background tasks
-├── tests/                  # Test suite
-│   ├── test_auth.py        # Authentication tests
-│   ├── test_chat.py        # Chat tests
-│   └── test_rag.py         # RAG tests
-├── SnapShots/              # API Documentation Screenshots
-│   ├── GET/                # GET request screenshots
-│   ├── POST/               # POST request screenshots
-│   └── jwt_token.png       # JWT authentication example
-├── requirements.txt        # Python dependencies
-└── README.md               # This documentation
+├── config/                        # Django configuration
+│   ├── settings.py                # Main settings
+│   ├── urls.py                    # URL routing
+│   └── wsgi.py                    # WSGI application
+├── users/                         # User management
+│   ├── models.py                  # User models
+│   ├── views.py                   # Authentication views
+│   └── serializers.py             # User serialization
+├── chat/                          # Chat functionality
+│   ├── models.py                  # Chat and Document models
+│   ├── views.py                   # Chat views
+│   └── urls.py                    # Chat URL routing
+├── rag/                           # RAG pipeline
+│   ├── models.py                  # Empty models file
+│   ├── views.py                   # RAG views
+│   ├── services.py                # RAG services
+│   └── urls.py                    # RAG URL routing
+├── background_tasks/              # Background processing
+│   ├── scheduler.py               # Task scheduling
+│   └── tasks.py                   # Background tasks
+├── tests/                         # Test suite
+│   ├── test_auth.py               # Authentication tests
+│   ├── test_chat.py               # Chat tests
+│   ├── test_rag.py                # RAG tests
+│   └── test_rag_functionality.py  # RAG functionality tests
+├── SnapShots/                     # API Documentation Screenshots
+│   ├── GET/                       # GET request screenshots
+│   ├── POST/                      # POST request screenshots
+│   └── jwt_token.png              # JWT authentication example
+├── requirements.txt               # Python dependencies
+└── README.md                      # This documentation
 ```
 
 ## 🤝 Contributing
