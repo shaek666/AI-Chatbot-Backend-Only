@@ -31,15 +31,20 @@ A backend-only AI chatbot service implementing Retrieval-Augmented Generation (R
 - `POST /api/auth/register/` - User registration
 - `POST /api/auth/login/` - User login with JWT tokens
 - `POST /api/token/refresh/` - Refresh JWT token
+- `GET /api/auth/profile/` - Get user profile
+- `POST /api/auth/verify-email/` - Verify user email
+- `POST /api/auth/verify-email/<str:token>/` - Verify user email with token
 
 ### Chat Operations
+- `GET, POST /api/chat/sessions/` - List and create chat sessions
+- `GET, PUT, PATCH, DELETE /api/chat/sessions/<int:pk>/` - Retrieve, update, and delete a chat session
+- `GET, POST /api/chat/sessions/<int:session_id>/messages/` - List and send messages in a session
 - `GET /api/chat/history/` - Retrieve user's chat history
-- `POST /api/chat/sessions/` - Create new chat session
-- `POST /api/chat/sessions/<int:session_id>/messages/` - Send message to a session
-- `DELETE /api/chat/sessions/<int:pk>/` - Delete chat session
 
 ### Document Management
+- `GET, POST /api/chat/documents/` - List and create documents
 - `POST /api/rag/index-documents/` - Index new documents
+- `POST /api/rag/chat/` - Chat with RAG pipeline
 
 ## 🛠️ Tech Stack
 
@@ -136,12 +141,12 @@ EMAIL_USE_TLS=True
 EMAIL_HOST_USER=your-email@example.com
 EMAIL_HOST_PASSWORD=your-email-password
 
-# Redis Configuration (for background tasks)
+# Redis Configuration (Optional, for background tasks)
+# APScheduler can run in-memory, but for production, Redis is recommended.
 REDIS_HOST=localhost
 REDIS_PORT=6379
 REDIS_DB=0
 REDIS_PASSWORD=
-USE_FAKE_REDIS=True
 ```
 
 ## 📖 API Documentation

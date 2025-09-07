@@ -178,9 +178,7 @@ PINECONE_ENVIRONMENT = config('PINECONE_ENVIRONMENT', default='')
 PINECONE_INDEX_NAME = config('PINECONE_INDEX_NAME', default='ai-chatbot-docs')
 MISTRAL_API_KEY = config('MISTRAL_API_KEY', default='')
 
-# Background task settings
-CELERY_BROKER_URL = config('CELERY_BROKER_URL', default='redis://localhost:6379/0')
-CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default='redis://localhost:6379/0')
+
 
 # Redis connection settings (using fakeredis for development)
 REDIS_HOST = config('REDIS_HOST', default='localhost')
