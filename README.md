@@ -139,59 +139,36 @@ nano .env  # or use your preferred editor
 
 **Complete .env Configuration:**
 ```bash
-# =============================================================================
-# AI Chatbot Backend - Local Development Environment
-# =============================================================================
-
-# =============================================================================
-# DJANGO CORE SETTINGS
-# =============================================================================
+# Django Core
 SECRET_KEY=django-insecure-local-dev-key-change-in-production
 DEBUG=True
 ALLOWED_HOSTS=localhost,127.0.0.1
 
-# =============================================================================
-# AI SERVICES CONFIGURATION
-# =============================================================================
-# Mistral AI API Key - Get from https://console.mistral.ai/
+# AI Services
 MISTRAL_API_KEY=your-mistral-api-key-here
-
-# Pinecone Configuration - Get from https://app.pinecone.io/
 PINECONE_API_KEY=your-pinecone-api-key-here
 PINECONE_ENVIRONMENT=your-pinecone-environment-here
 PINECONE_INDEX_NAME=ai-chatbot-docs
 
-# =============================================================================
-# REDIS CONFIGURATION (Local Development)
-# =============================================================================
+# Redis
 REDIS_HOST=localhost
 REDIS_PORT=6379
 REDIS_DB=0
 REDIS_PASSWORD=
 USE_FAKE_REDIS=True
 
-# =============================================================================
-# EMAIL CONFIGURATION
-# =============================================================================
+# Email
 EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
 EMAIL_USE_TLS=True
 EMAIL_HOST_USER=your-email@gmail.com
 EMAIL_HOST_PASSWORD=your-app-password
 
-# =============================================================================
-# BACKGROUND TASKS
-# =============================================================================
+# Background Tasks
 DISABLE_BACKGROUND_TASKS=False
-
-# =============================================================================
-# CORS CONFIGURATION
-# =============================================================================
 CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 
-# =============================================================================
-# LOCAL DEVELOPMENT SETTINGS
-# =============================================================================
+# Development Settings
 LOG_LEVEL=DEBUG
 MAX_UPLOAD_SIZE=10485760
 ALLOWED_FILE_TYPES=txt,pdf,doc,docx,md
@@ -203,9 +180,7 @@ RATE_LIMIT_REQUESTS_PER_HOUR=10000
 CACHE_TIMEOUT=300
 CACHE_KEY_PREFIX=ai_chatbot_local
 
-# =============================================================================
-# FEATURE FLAGS
-# =============================================================================
+# Feature Flags
 ENABLE_EMAIL_VERIFICATION=True
 ENABLE_PASSWORD_RESET=True
 ENABLE_USER_PROFILES=True
@@ -213,9 +188,7 @@ ENABLE_CHAT_EXPORT=True
 ENABLE_ANALYTICS=False
 ENABLE_ADMIN_PANEL=True
 
-# =============================================================================
-# SECURITY SETTINGS (Local Development)
-# =============================================================================
+# Security
 SESSION_COOKIE_SECURE=False
 CSRF_COOKIE_SECURE=False
 SECURE_SSL_REDIRECT=False
